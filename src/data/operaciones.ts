@@ -20,7 +20,7 @@ import { toast } from 'sonner'
 import { db } from '@/lib/firebase'
 import { calcularDia } from '@/lib/calculos'
 import { colJuegos, refConfig, refDia, refJuego, refRegistro } from './refs'
-import type { Config, Dia, Registro } from './tipos'
+import type { Config, Dia, Juego, Registro } from './tipos'
 
 export const JUEGOS_INICIALES: { nombre: string; porcentaje: number }[] = [
   { nombre: 'Primera', porcentaje: 6 },
@@ -78,6 +78,65 @@ export function crearDia(uid: string, fecha: string, config: Config) {
     batch.update(refConfig(uid), { ultimoDia: fecha })
   }
   enviar(batch)
+}
+
+// ---------------------------------------------------------------------------
+// Juegos (catalogo)
+// ---------------------------------------------------------------------------
+
+/** Busca un juego con el mismo nombre (sin importar mayusculas ni espacios). */
+export function buscarJuegoPorNombre(juegos: readonly Juego[], nombre: string, excepto?: string) {
+  const clave = nombre.trim().replace(/\s+/g, ' ').toLowerCase()
+  return juegos.find((j) => j.id !== excepto && j.nombre.trim().toLowerCase() === clave)
+}
+
+/** Crea un juego al final de la lista. Devuelve el juego (se ve al instante, aun sin conexion). */
+export function crearJuego(
+  uid: string,
+  juegos: readonly Juego[],
+  datos: { nombre: string; porcentaje: number },
+): Juego {
+  const ref = doc(colJuegos(uid))
+  const juego: Juego = {
+    id: ref.id,
+    nombre: datos.nombre.trim().replace(/\s+/g, ' '),
+    porcentaje: datos.porcentaje,
+    activo: true,
+    orden: Math.max(0, ...juegos.map((j) => j.orden)) + 1,
+    usos: 0,
+  }
+  const batch = writeBatch(db)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, ...resto } = juego
+  batch.set(ref, resto)
+  enviar(batch)
+  return juego
+}
+
+export function actualizarJuego(
+  uid: string,
+  id: string,
+  cambios: Partial<Pick<Juego, 'nombre' | 'porcentaje' | 'activo'>>,
+) {
+  const batch = writeBatch(db)
+  batch.update(refJuego(uid, id), {
+    ...cambios,
+    ...(cambios.nombre !== undefined && { nombre: cambios.nombre.trim().replace(/\s+/g, ' ') }),
+  })
+  enviar(batch)
+}
+
+/** Guarda el nuevo orden (1, 2, 3...) de los juegos, solo los que cambiaron. */
+export function reordenarJuegos(uid: string, ordenados: readonly Juego[]) {
+  const batch = writeBatch(db)
+  let cambios = 0
+  ordenados.forEach((j, i) => {
+    if (j.orden !== i + 1) {
+      batch.update(refJuego(uid, j.id), { orden: i + 1 })
+      cambios++
+    }
+  })
+  if (cambios) enviar(batch)
 }
 
 /** Campos que se guardan de cada registro (sin el id, que es el del documento). */

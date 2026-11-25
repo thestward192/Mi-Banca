@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Campo, InputMonto } from '@/components/Campo'
 import { Hoja } from '@/components/Hoja'
 import { cn } from '@/lib/utils'
+import { SelectorJuego } from '@/components/juegos/SelectorJuego'
+import type { DatosJuego } from '@/components/juegos/FormJuego'
 import { calcularGanancia, efectoEnBanca } from '@/lib/calculos'
 import {
   formatearMientrasEscribe,
@@ -44,6 +46,7 @@ type Props = {
   confirmarBorrar: boolean
   onGuardar: (datos: DatosJugada) => void
   onEliminar: (jugada: Jugada) => void
+  onCrearJuego: (datos: DatosJuego) => Juego
 }
 
 type Errores = Partial<Record<'juego' | 'vendido' | 'porcentaje', string>>
@@ -58,6 +61,7 @@ export function FormJugada({
   confirmarBorrar,
   onGuardar,
   onEliminar,
+  onCrearJuego,
 }: Props) {
   const [vista, setVista] = useState<'form' | 'juegos'>('form')
   const [juegoId, setJuegoId] = useState('')
@@ -70,6 +74,7 @@ export function FormJugada({
   const [masOpciones, setMasOpciones] = useState(false)
   const [errores, setErrores] = useState<Errores>({})
   const [confirmando, setConfirmando] = useState(false)
+  const [creandoJuego, setCreandoJuego] = useState(false)
   const refNumero = useRef<HTMLInputElement>(null)
 
   const activos = juegos.filter((j) => j.activo)
@@ -78,6 +83,7 @@ export function FormJugada({
   useEffect(() => {
     if (!abierta) return
     setVista('form')
+    setCreandoJuego(false)
     setErrores({})
     setConfirmando(false)
     if (jugada) {
@@ -155,7 +161,14 @@ export function FormJugada({
     onEliminar(jugada)
   }
 
-  const titulo = vista === 'juegos' ? 'Elegir juego' : jugada ? 'Editar jugada' : 'Nueva jugada'
+  const titulo =
+    vista === 'juegos'
+      ? creandoJuego
+        ? 'Nuevo juego'
+        : 'Elegir juego'
+      : jugada
+        ? 'Editar jugada'
+        : 'Nueva jugada'
 
   return (
     <Hoja
@@ -178,36 +191,24 @@ export function FormJugada({
               Guardar
             </Button>
           </div>
+        ) : creandoJuego ? (
+          <Button type="submit" form="form-juego-nuevo" size="lg" className="w-full">
+            Guardar juego
+          </Button>
         ) : undefined
       }
     >
       {vista === 'juegos' ? (
-        <div className="flex flex-col gap-1">
-          <Button
-            variant="ghost"
-            className="justify-start self-start px-2 text-muted-foreground"
-            onClick={() => setVista('form')}
-          >
-            <ChevronLeft /> Volver
-          </Button>
-          <ul className="flex flex-col">
-            {activos.map((j) => (
-              <li key={j.id}>
-                <button
-                  type="button"
-                  onClick={() => elegirJuego(j)}
-                  className={cn(
-                    'flex min-h-12 w-full items-center justify-between rounded-lg px-3 text-left hover:bg-accent',
-                    j.id === juegoId && 'bg-primary/10 font-medium text-primary',
-                  )}
-                >
-                  <span>{j.nombre}</span>
-                  <span className="tabular text-sm text-muted-foreground">{j.porcentaje}%</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <SelectorJuego
+          juegos={juegos}
+          seleccionadoId={juegoId}
+          porcentajeDefault={porcentajeDefault}
+          onElegir={elegirJuego}
+          onCrear={onCrearJuego}
+          onVolver={() => setVista('form')}
+          creando={creandoJuego}
+          onCreando={setCreandoJuego}
+        />
       ) : (
         <form id="form-jugada" onSubmit={onSubmit} className="flex flex-col gap-4 pt-1" noValidate>
           <Campo id="juego" etiqueta="Juego" error={errores.juego}>

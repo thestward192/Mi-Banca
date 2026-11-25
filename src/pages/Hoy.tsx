@@ -8,7 +8,7 @@ import { ResumenDia } from '@/components/dia/ResumenDia'
 import { TablaRegistros } from '@/components/dia/TablaRegistros'
 import { TarjetaJugada } from '@/components/dia/TarjetaJugada'
 import { useDatos } from '@/data/DatosProvider'
-import { guardarCambiosDia } from '@/data/operaciones'
+import { crearJuego, guardarCambiosDia } from '@/data/operaciones'
 import { nuevoIdRegistro } from '@/data/refs'
 import { useDia } from '@/data/useDia'
 import type { DatosJugada, Dia, Jugada, Registro } from '@/data/tipos'
@@ -185,6 +185,11 @@ export default function Hoy() {
         confirmarBorrar={config.confirmarBorrar ?? true}
         onGuardar={onGuardar}
         onEliminar={onEliminar}
+        onCrearJuego={(datos) => {
+          const juego = crearJuego(uid, juegos, datos)
+          toast.success('Juego creado')
+          return juego
+        }}
       />
 
       <ResumenDia
