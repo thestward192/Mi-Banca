@@ -21,7 +21,7 @@ Complementa a `sistema-loteria.md`. Este documento define **cómo se ve y cómo 
 ## 2. Estilo visual
 
 ### 2.1 Colores
-Fondo claro, un solo color de acento y colores con significado para el dinero.
+Fondo claro, un solo color de acento (negro, elegido en lugar del azul original) y colores con significado para el dinero.
 
 | Uso | Color | Hex |
 |---|---|---|
@@ -30,7 +30,7 @@ Fondo claro, un solo color de acento y colores con significado para el dinero.
 | Texto principal | Casi negro | `#1C1917` |
 | Texto secundario | Gris | `#78716C` |
 | Bordes / divisores | Gris claro | `#E7E5E4` |
-| **Acento** (botones, enlaces) | Azul | `#2563EB` |
+| **Acento** (botones, enlaces) | Negro (casi negro) | `#1C1917` (en modo oscuro: `#FAFAF9`) |
 | Ganancia / suma | Verde | `#16A34A` |
 | Premio / resta | Rojo | `#DC2626` |
 | Movimiento de banca | Ámbar | `#D97706` |

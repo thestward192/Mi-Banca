@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { ArrowLeftRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Apuntes } from '@/components/dia/Apuntes'
 import { EncabezadoBanca } from '@/components/dia/EncabezadoBanca'
 import { FormJugada } from '@/components/dia/FormJugada'
+import { FormMovimiento } from '@/components/dia/FormMovimiento'
 import { ResumenDia } from '@/components/dia/ResumenDia'
 import { TablaRegistros } from '@/components/dia/TablaRegistros'
 import { TarjetaJugada } from '@/components/dia/TarjetaJugada'
+import { TarjetaMovimiento } from '@/components/dia/TarjetaMovimiento'
 import { useDatos } from '@/data/DatosProvider'
 import { crearJuego, guardarCambiosDia } from '@/data/operaciones'
 import { nuevoIdRegistro } from '@/data/refs'
 import { useDia } from '@/data/useDia'
-import type { DatosJugada, Dia, Jugada, Registro } from '@/data/tipos'
+import type { DatosJugada, DatosMovimiento, Dia, Jugada, Movimiento, Registro } from '@/data/tipos'
 import { useHoy } from '@/hooks/useHoy'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { efectoEnBanca } from '@/lib/calculos'
@@ -25,6 +28,8 @@ export default function Hoy() {
 
   const [formAbierto, setFormAbierto] = useState(false)
   const [editando, setEditando] = useState<Jugada | null>(null)
+  const [movAbierto, setMovAbierto] = useState(false)
+  const [editandoMov, setEditandoMov] = useState<Movimiento | null>(null)
   const [resumenAbierto, setResumenAbierto] = useState(false)
   const [resaltadoId, setResaltadoId] = useState<string | null>(null)
 
@@ -54,29 +59,45 @@ export default function Hoy() {
     setFormAbierto(true)
   }
 
+  function abrirMovimiento() {
+    setEditandoMov(null)
+    setMovAbierto(true)
+  }
+
   function abrirEdicion(r: Registro) {
-    if (r.tipo !== 'jugada') return // movimientos: Fase 5
-    setEditando(r)
-    setFormAbierto(true)
+    if (r.tipo === 'jugada') {
+      setEditando(r)
+      setFormAbierto(true)
+    } else {
+      setEditandoMov(r)
+      setMovAbierto(true)
+    }
+  }
+
+  /** Avisa si al cambiar una linea que no es la ultima se movieron las bancas de abajo. */
+  function avisoGuardado(texto: string, original: Registro, cambiado: Registro) {
+    const actuales = ultimo.current.registros ?? []
+    const esUltimaLinea = actuales[actuales.length - 1]?.id === original.id
+    const cambioBanca = efectoEnBanca(cambiado) !== efectoEnBanca(original)
+    toast.success(
+      !esUltimaLinea && cambioBanca ? `${texto} · Se actualizaron las bancas siguientes` : texto,
+    )
+  }
+
+  function siguienteOrden() {
+    return Math.max(0, ...(ultimo.current.registros ?? []).map((r) => r.orden)) + 1
   }
 
   function onGuardar(datos: DatosJugada) {
     const actuales = ultimo.current.registros ?? []
     if (editando) {
-      const despues = actuales.map((r) => (r.id === editando.id ? { ...editando, ...datos } : r))
-      const r = guardar(despues)
-      const esUltimaLinea = actuales[actuales.length - 1]?.id === editando.id
-      const cambioBanca =
-        efectoEnBanca({ tipo: 'jugada', ...datos }) !== efectoEnBanca(editando)
-      toast.success(
-        !esUltimaLinea && cambioBanca
-          ? 'Jugada guardada · Se actualizaron las bancas siguientes'
-          : 'Jugada guardada',
-      )
-      if (r) setResaltadoId(editando.id)
+      const cambiada: Jugada = { ...editando, ...datos }
+      guardar(actuales.map((r) => (r.id === editando.id ? cambiada : r)))
+      avisoGuardado('Jugada guardada', editando, cambiada)
+      setResaltadoId(editando.id)
     } else {
       const id = nuevoIdRegistro(uid, fecha)
-      const orden = Math.max(0, ...actuales.map((r) => r.orden)) + 1
+      const orden = siguienteOrden()
       const nueva: Jugada = {
         id,
         orden,
@@ -94,19 +115,45 @@ export default function Hoy() {
     setFormAbierto(false)
   }
 
-  function onEliminar(jugada: Jugada) {
+  function onGuardarMovimiento(datos: DatosMovimiento) {
     const actuales = ultimo.current.registros ?? []
-    guardar(actuales.filter((r) => r.id !== jugada.id))
+    if (editandoMov) {
+      const cambiado: Movimiento = { ...editandoMov, ...datos }
+      guardar(actuales.map((r) => (r.id === editandoMov.id ? cambiado : r)))
+      avisoGuardado('Movimiento guardado', editandoMov, cambiado)
+      setResaltadoId(editandoMov.id)
+    } else {
+      const id = nuevoIdRegistro(uid, fecha)
+      const nuevo: Movimiento = {
+        id,
+        orden: siguienteOrden(),
+        tipo: 'movimiento',
+        creadoEn: null,
+        ...datos,
+        bancaResultante: 0,
+      }
+      guardar([...actuales, nuevo])
+      toast.success('Movimiento guardado')
+      setResaltadoId(id)
+    }
+    setMovAbierto(false)
+  }
+
+  /** Borra una linea y ofrece Deshacer por 5 segundos. */
+  function eliminar(registro: Registro) {
+    const actuales = ultimo.current.registros ?? []
+    guardar(actuales.filter((r) => r.id !== registro.id))
     setFormAbierto(false)
-    toast('Jugada eliminada', {
+    setMovAbierto(false)
+    toast(registro.tipo === 'jugada' ? 'Jugada eliminada' : 'Movimiento eliminado', {
       duration: 5000,
       action: {
         label: 'Deshacer',
         onClick: () => {
           const ahora = ultimo.current.registros ?? []
-          if (ahora.some((r) => r.id === jugada.id)) return
-          guardar([...ahora, jugada])
-          setResaltadoId(jugada.id)
+          if (ahora.some((r) => r.id === registro.id)) return
+          guardar([...ahora, registro])
+          setResaltadoId(registro.id)
         },
       },
     })
@@ -118,10 +165,11 @@ export default function Hoy() {
   }
 
   // Banca antes de la linea que se edita (o la banca final, si es nueva).
-  const bancaAntes = editando
-    ? (registros.find((r) => r.id === editando.id)?.bancaResultante ?? dia.bancaFinal) -
-      efectoEnBanca(registros.find((r) => r.id === editando.id) ?? editando)
-    : dia.bancaFinal
+  const bancaAntesDe = (linea: Registro | null) => {
+    if (!linea) return dia.bancaFinal
+    const guardada = registros.find((r) => r.id === linea.id) ?? linea
+    return guardada.bancaResultante - efectoEnBanca(guardada)
+  }
 
   return (
     <div className="flex flex-col gap-4 pb-28">
@@ -152,23 +200,34 @@ export default function Hoy() {
         <TablaRegistros registros={registros} resaltadoId={resaltadoId} onTocar={abrirEdicion} />
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
-          {registros.map((r) =>
-            r.tipo === 'jugada' ? (
-              <li key={r.id}>
+          {registros.map((r) => (
+            <li key={r.id}>
+              {r.tipo === 'jugada' ? (
                 <TarjetaJugada
                   jugada={r}
                   resaltada={resaltadoId === r.id}
                   onTocar={() => abrirEdicion(r)}
                 />
-              </li>
-            ) : null,
-          )}
+              ) : (
+                <TarjetaMovimiento
+                  movimiento={r}
+                  resaltada={resaltadoId === r.id}
+                  onTocar={() => abrirEdicion(r)}
+                />
+              )}
+            </li>
+          ))}
         </ul>
       )}
 
-      {/* Boton fijo abajo, al alcance del pulgar */}
+      <Apuntes key={fecha} uid={uid} fecha={fecha} apuntes={dia.apuntes ?? ''} />
+
+      {/* Botones fijos abajo, al alcance del pulgar */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:left-[260px]">
         <div className="mx-auto flex max-w-[960px] gap-2">
+          <Button size="lg" variant="outline" className="shrink-0 px-4" onClick={abrirMovimiento}>
+            <ArrowLeftRight /> Banca
+          </Button>
           <Button size="lg" className="flex-1" onClick={abrirNueva}>
             <Plus /> Jugada
           </Button>
@@ -181,15 +240,25 @@ export default function Hoy() {
         juegos={juegos}
         porcentajeDefault={config.porcentajeDefault}
         jugada={editando}
-        bancaAntes={bancaAntes}
+        bancaAntes={bancaAntesDe(editando)}
         confirmarBorrar={config.confirmarBorrar ?? true}
         onGuardar={onGuardar}
-        onEliminar={onEliminar}
+        onEliminar={eliminar}
         onCrearJuego={(datos) => {
           const juego = crearJuego(uid, juegos, datos)
           toast.success('Juego creado')
           return juego
         }}
+      />
+
+      <FormMovimiento
+        abierta={movAbierto}
+        onCambiar={setMovAbierto}
+        movimiento={editandoMov}
+        bancaAntes={bancaAntesDe(editandoMov)}
+        confirmarBorrar={config.confirmarBorrar ?? true}
+        onGuardar={onGuardarMovimiento}
+        onEliminar={eliminar}
       />
 
       <ResumenDia

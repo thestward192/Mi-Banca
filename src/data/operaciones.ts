@@ -80,6 +80,18 @@ export function crearDia(uid: string, fecha: string, config: Config) {
   enviar(batch)
 }
 
+/** Apuntes del dia: texto libre que no afecta ningun calculo. */
+export function guardarApuntes(uid: string, fecha: string, apuntes: string): Promise<void> {
+  const batch = writeBatch(db)
+  batch.update(refDia(uid, fecha), { apuntes })
+  const p = batch.commit()
+  p.catch((err) => {
+    console.error(err)
+    toast.error('No se pudieron guardar los apuntes')
+  })
+  return p
+}
+
 // ---------------------------------------------------------------------------
 // Juegos (catalogo)
 // ---------------------------------------------------------------------------

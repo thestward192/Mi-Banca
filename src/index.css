@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Paleta de diseno-ui.md (seccion 2.1).
+ * Paleta de diseno-ui.md (seccion 2.1). Acento: negro (a pedido, en lugar de azul).
  * Modo oscuro: fondo #0C0A09, tarjetas #1C1917, texto #FAFAF9.
  */
 :root {
@@ -17,8 +17,8 @@
   --card-foreground: #1c1917;
   --popover: #ffffff;
   --popover-foreground: #1c1917;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
+  --primary: #1c1917;
+  --primary-foreground: #fafaf9;
   --secondary: #f5f5f4;
   --secondary-foreground: #1c1917;
   --muted: #f5f5f4;
@@ -28,7 +28,7 @@
   --destructive: #dc2626;
   --border: #e7e5e4;
   --input: #e7e5e4;
-  --ring: #2563eb;
+  --ring: #78716c;
 
   --ganancia: #16a34a;
   --premio: #dc2626;
@@ -42,8 +42,8 @@
   --card-foreground: #fafaf9;
   --popover: #1c1917;
   --popover-foreground: #fafaf9;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
+  --primary: #fafaf9;
+  --primary-foreground: #1c1917;
   --secondary: #292524;
   --secondary-foreground: #fafaf9;
   --muted: #292524;
@@ -53,7 +53,7 @@
   --destructive: #ef4444;
   --border: #292524;
   --input: #44403c;
-  --ring: #3b82f6;
+  --ring: #a8a29e;
 
   --ganancia: #22c55e;
   --premio: #ef4444;

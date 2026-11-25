@@ -64,6 +64,9 @@ export type Movimiento = RegistroBase & {
 
 export type Registro = Jugada | Movimiento
 
+/** Lo que se llena en el formulario de movimiento. */
+export type DatosMovimiento = Pick<Movimiento, 'subtipo' | 'monto' | 'nota'>
+
 /** Lo que se llena en el formulario de jugada. */
 export type DatosJugada = Pick<
   Jugada,
