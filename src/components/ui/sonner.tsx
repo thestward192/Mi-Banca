@@ -16,6 +16,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={isDark ? 'dark' : 'light'}
       className="toaster group"
+      toastOptions={{
+        classNames: {
+          // Boton "Deshacer" comodo para el pulgar (min. 44 px de alto).
+          toast: '!text-base',
+          actionButton: '!h-11 !rounded-lg !px-4 !text-base !font-semibold',
+        },
+      }}
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,
