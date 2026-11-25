@@ -10,8 +10,12 @@
  */
 import {
   doc,
+  getDocs,
   increment,
+  orderBy,
+  query,
   serverTimestamp,
+  where,
   writeBatch,
   type FieldValue,
   type WriteBatch,
@@ -19,7 +23,7 @@ import {
 import { toast } from 'sonner'
 import { db } from '@/lib/firebase'
 import { calcularDia } from '@/lib/calculos'
-import { colJuegos, refConfig, refDia, refJuego, refRegistro } from './refs'
+import { colDias, colJuegos, colRegistros, refConfig, refDia, refJuego, refRegistro } from './refs'
 import type { Config, Dia, Juego, Registro } from './tipos'
 
 export const JUEGOS_INICIALES: { nombre: string; porcentaje: number }[] = [
@@ -181,43 +185,99 @@ export type CambiosDia = {
 }
 
 /**
- * Guarda un dia completo: recalcula todas sus lineas en orden, escribe solo
- * las que cambiaron, borra las que ya no estan, actualiza los totales del dia
- * y la banca actual / ganancia acumulada. Todo en un solo batch.
- *
+ * Recalcula un dia con la banca inicial dada y agrega al batch solo lo que
+ * cambio: lineas nuevas o distintas, lineas borradas y los totales del dia.
  * Devuelve el dia recalculado.
  */
-export function guardarCambiosDia(c: CambiosDia) {
-  const ordenados = [...c.despues].sort((a, b) => a.orden - b.orden)
-  const calculo = calcularDia(c.bancaInicial ?? c.dia.bancaInicial, ordenados)
+function escribirDia(
+  batch: WriteBatch,
+  uid: string,
+  dia: Dia,
+  antes: readonly Registro[],
+  despues: readonly Registro[],
+  bancaInicial: number,
+) {
+  const ordenados = [...despues].sort((a, b) => a.orden - b.orden)
+  const calculo = calcularDia(bancaInicial, ordenados)
   const registros = calculo.registros as Registro[]
-
-  const batch = writeBatch(db)
-  const previos = new Map(c.antes.map((r) => [r.id, r]))
+  const previos = new Map(antes.map((r) => [r.id, r]))
 
   for (const r of registros) {
     const previo = previos.get(r.id)
     if (!previo || !mismoContenido(previo, r)) {
-      batch.set(refRegistro(c.uid, c.dia.fecha, r.id), aDocumento(r, previo))
+      batch.set(refRegistro(uid, dia.fecha, r.id), aDocumento(r, previo))
     }
     previos.delete(r.id)
   }
   for (const id of previos.keys()) {
-    batch.delete(refRegistro(c.uid, c.dia.fecha, id))
+    batch.delete(refRegistro(uid, dia.fecha, id))
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { registros: _r, ...totales } = calculo
-  batch.update(refDia(c.uid, c.dia.fecha), totales)
+  const cambioTotales = (Object.keys(totales) as (keyof typeof totales)[]).some(
+    (k) => totales[k] !== dia[k],
+  )
+  if (cambioTotales) batch.update(refDia(uid, dia.fecha), totales)
+  return { ...totales, registros }
+}
+
+/** Dias posteriores a una fecha, con sus registros (de la cache si no hay senal). */
+async function leerDiasPosteriores(uid: string, fecha: string) {
+  const dias = await getDocs(query(colDias(uid), where('fecha', '>', fecha), orderBy('fecha')))
+  return Promise.all(
+    dias.docs.map(async (d) => {
+      const regs = await getDocs(query(colRegistros(uid, d.id), orderBy('orden')))
+      return {
+        dia: d.data() as Dia,
+        registros: regs.docs.map((r) => ({ ...(r.data() as Omit<Registro, 'id'>), id: r.id }) as Registro),
+      }
+    }),
+  )
+}
+
+/**
+ * Guarda un dia completo: recalcula todas sus lineas en orden, escribe solo
+ * las que cambiaron, borra las que ya no estan y actualiza los totales.
+ *
+ * Si no es el ultimo dia, pasa la nueva banca final como banca inicial del
+ * dia siguiente y asi en cadena hasta hoy (sistema-loteria.md, 5.2). Todo
+ * (el dia editado, los siguientes y la config) va en un solo batch.
+ *
+ * Devuelve cuantos dias siguientes cambiaron de banca.
+ */
+export async function guardarCambiosDia(c: CambiosDia): Promise<{ diasSiguientes: number }> {
+  const batch = writeBatch(db)
+  const calculo = escribirDia(
+    batch,
+    c.uid,
+    c.dia,
+    c.antes,
+    c.despues,
+    c.bancaInicial ?? c.dia.bancaInicial,
+  )
 
   const cambiosConfig: { gananciaAcumulada?: FieldValue; bancaActual?: number } = {}
-  const deltaGanancia = totales.totalGanancia - c.dia.totalGanancia
+  const deltaGanancia = calculo.totalGanancia - c.dia.totalGanancia
   if (deltaGanancia !== 0) cambiosConfig.gananciaAcumulada = increment(deltaGanancia)
-  if (c.esUltimo) cambiosConfig.bancaActual = totales.bancaFinal
-  if (Object.keys(cambiosConfig).length) batch.update(refConfig(c.uid), cambiosConfig)
-
   if (c.juegoUsado) batch.update(refJuego(c.uid, c.juegoUsado), { usos: increment(1) })
 
+  let diasSiguientes = 0
+  if (c.esUltimo) {
+    cambiosConfig.bancaActual = calculo.bancaFinal
+  } else if (calculo.bancaFinal !== c.dia.bancaFinal) {
+    // La banca final cambio: recalcular en cadena los dias siguientes.
+    const posteriores = await leerDiasPosteriores(c.uid, c.dia.fecha)
+    let banca = calculo.bancaFinal
+    for (const { dia, registros } of posteriores) {
+      if (dia.bancaInicial !== banca) diasSiguientes++
+      banca = escribirDia(batch, c.uid, dia, registros, registros, banca).bancaFinal
+    }
+    // Si no se pudieron leer (sin senal y sin cache), no se toca la banca actual.
+    if (posteriores.length) cambiosConfig.bancaActual = banca
+  }
+
+  if (Object.keys(cambiosConfig).length) batch.update(refConfig(c.uid), cambiosConfig)
   enviar(batch)
-  return { ...totales, registros }
+  return { diasSiguientes }
 }

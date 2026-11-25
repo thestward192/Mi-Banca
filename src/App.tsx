@@ -4,10 +4,16 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { TODAS_LAS_RUTAS } from '@/components/layout/menu'
 import { PantallaCarga } from '@/components/PantallaCarga'
 import { DatosProvider } from '@/data/DatosProvider'
+import DiaAnterior from '@/pages/DiaAnterior'
+import Historial from '@/pages/Historial'
 import Hoy from '@/pages/Hoy'
 import Juegos from '@/pages/Juegos'
 import Login from '@/pages/Login'
 import Pendiente from '@/pages/Pendiente'
+import Resumen from '@/pages/Resumen'
+
+/** Pantallas ya hechas; el resto del menu muestra "Esta pantalla estara lista pronto". */
+const HECHAS = ['/', '/historial', '/resumen', '/juegos']
 
 export default function App() {
   const { usuario, cargando } = useAuth()
@@ -21,10 +27,15 @@ export default function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<Hoy />} />
+            <Route path="dia/:fecha" element={<DiaAnterior />} />
+            <Route path="historial" element={<Historial />} />
+            <Route path="resumen" element={<Resumen />} />
             <Route path="juegos" element={<Juegos />} />
-            {TODAS_LAS_RUTAS.filter(({ ruta }) => ruta !== '/' && ruta !== '/juegos').map(({ ruta, titulo, icono }) => (
-              <Route key={ruta} path={ruta} element={<Pendiente titulo={titulo} icono={icono} />} />
-            ))}
+            {TODAS_LAS_RUTAS.filter(({ ruta }) => !HECHAS.includes(ruta)).map(
+              ({ ruta, titulo, icono }) => (
+                <Route key={ruta} path={ruta} element={<Pendiente titulo={titulo} icono={icono} />} />
+              ),
+            )}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

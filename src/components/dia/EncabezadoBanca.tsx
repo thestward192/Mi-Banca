@@ -2,6 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { formatearMonto } from '@/lib/formato'
 
 type Props = {
+  etiquetaBanca?: string
   banca: number
   gananciaHoy: number
   gananciaAcumulada: number | undefined
@@ -11,6 +12,7 @@ type Props = {
 
 /** La banca es el numero mas grande de la app. Al tocarlo se abre el resumen del dia. */
 export function EncabezadoBanca({
+  etiquetaBanca = 'Banca',
   banca,
   gananciaHoy,
   gananciaAcumulada,
@@ -24,7 +26,7 @@ export function EncabezadoBanca({
       className="group w-full rounded-xl border bg-card px-4 py-4 text-center shadow-[0_1px_2px_rgba(0,0,0,.06)] transition-colors hover:bg-accent/50"
       aria-label="Ver resumen del día"
     >
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Banca</p>
+      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{etiquetaBanca}</p>
       <p
         className={
           'tabular mt-1 text-[2.25rem] leading-tight font-bold ' + (banca < 0 ? 'text-premio' : '')

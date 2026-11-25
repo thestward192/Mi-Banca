@@ -35,5 +35,7 @@ export function useDia(fecha: string, { crearSiFalta = false } = {}) {
     dia: dia.datos ?? undefined,
     registros: registros.datos,
     cargando: dia.datos == null || registros.datos === undefined,
+    /** El dia no existe (confirmado por el servidor, o sin conexion y sin copia guardada). */
+    noExiste: dia.datos === null && (dia.desdeServidor || !navigator.onLine),
   }
 }

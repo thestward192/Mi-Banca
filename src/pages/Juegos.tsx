@@ -76,13 +76,13 @@ export default function Juegos() {
 
   return (
     <section className="flex flex-col gap-4 pb-8">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">Juegos</h2>
+      <div className="flex items-center justify-end gap-3">
+        <h2 className="sr-only">Juegos</h2>
         <Button onClick={() => setHoja({ abierta: true, juego: null })}>
           <Plus /> Agregar
         </Button>
       </div>
-      <p className="-mt-2 text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Toca un juego para cambiar el nombre o el %. Arrastra desde{' '}
         <GripVertical className="inline size-4 align-text-bottom" aria-label="el ícono de arrastrar" /> para
         ordenarlos. Los desactivados no salen al anotar.

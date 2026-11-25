@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { CalendarDays, Menu, WifiOff } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Button } from '@/components/ui/button'
@@ -15,12 +15,17 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/
 import { useDeslizarDesdeBorde } from '@/hooks/useDeslizarDesdeBorde'
 import { useEnLinea } from '@/hooks/useEnLinea'
 import { correoANombre } from '@/lib/credenciales'
-import { fechaCorta, hoyISO } from '@/lib/fecha'
+import { esFechaISO, fechaCorta } from '@/lib/fecha'
+import { useHoy } from '@/hooks/useHoy'
+import { TODAS_LAS_RUTAS } from './menu'
 import { MenuLateral } from './MenuLateral'
 
 export function AppLayout() {
   const { usuario, salir } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const hoy = useHoy()
+  const titulo = tituloDe(pathname, hoy)
   const enLinea = useEnLinea()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
@@ -94,7 +99,7 @@ export function AppLayout() {
           >
             <Menu className="size-6" />
           </Button>
-          <h1 className="flex-1 truncate px-1 text-xl font-semibold">{fechaCorta(hoyISO())}</h1>
+          <h1 className="flex-1 truncate px-1 text-xl font-semibold">{titulo}</h1>
           <Button
             variant="ghost"
             size="icon"
@@ -142,4 +147,12 @@ export function AppLayout() {
       </Dialog>
     </div>
   )
+}
+
+/** Titulo de la barra: la fecha en Hoy y en los dias anteriores, el nombre en el resto. */
+function tituloDe(ruta: string, hoy: string): string {
+  if (ruta === '/') return fechaCorta(hoy)
+  const fecha = ruta.startsWith('/dia/') ? ruta.slice('/dia/'.length) : undefined
+  if (esFechaISO(fecha)) return fechaCorta(fecha)
+  return TODAS_LAS_RUTAS.find((r) => r.ruta === ruta)?.titulo ?? 'Mi Banca'
 }
