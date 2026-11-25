@@ -71,7 +71,18 @@ function mensajeDeError(err: unknown): string {
         return 'Demasiados intentos. Espera un momento y vuelve a probar'
       case 'auth/network-request-failed':
         return 'Sin conexión. Revisa el internet y vuelve a probar'
+      case 'auth/unauthorized-domain':
+      case 'auth/requests-from-referer-are-blocked':
+        return `Esta página (${window.location.hostname}) no está autorizada en Firebase. Agrégala en Authentication > Configuración > Dominios autorizados`
+      case 'auth/operation-not-allowed':
+        return 'El inicio con correo y contraseña no está activado en Firebase'
+      case 'auth/invalid-api-key':
+      case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+        return 'Las claves de Firebase de esta página no son correctas'
     }
+    console.error(err)
+    return `No se pudo entrar (${err.code}). Vuelve a probar`
   }
+  console.error(err)
   return 'No se pudo entrar. Vuelve a probar'
 }
