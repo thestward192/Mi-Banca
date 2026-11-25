@@ -1,0 +1,13 @@
+rules_version = '2';
+
+// Reglas de seguridad de Mi Banca (sistema-loteria.md, seccion 5.3).
+// Cada usuario solo puede leer y escribir lo que esta dentro de usuarios/{su uid}:
+// config, juegos, dias (con sus registros) y cobrosGanancia.
+// Cualquier otra ruta queda cerrada.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /usuarios/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

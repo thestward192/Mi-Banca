@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Icono de la app: boleto blanco sobre fondo casi negro (acento de la app). -->
+  <rect width="512" height="512" rx="112" fill="#1C1917"/>
+  <g fill="none" stroke="#FAFAF9" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" transform="translate(112 112) scale(12)">
+    <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" stroke-width="1.8"/>
+    <path d="M13 5v2" stroke-width="1.8"/>
+    <path d="M13 17v2" stroke-width="1.8"/>
+    <path d="M13 11v2" stroke-width="1.8"/>
+  </g>
+</svg>

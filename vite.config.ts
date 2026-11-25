@@ -8,26 +8,47 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    // Configuracion base de la PWA. Los iconos PNG y el manifest completo llegan en la Fase 8.
+    // PWA: "Agregar a pantalla principal" y abrir a pantalla completa, con todo guardado
+    // en el telefono para que abra sin senal. Iconos: npm run iconos (pwa-assets.config.ts).
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
+        id: '/',
         name: 'Mi Banca',
         short_name: 'Mi Banca',
-        description: 'Control de ventas de lotería y banca',
+        description: 'Control diario de ventas de lotería, premios, ganancia y banca',
         lang: 'es',
+        dir: 'ltr',
         start_url: '/',
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#FAFAF9',
         theme_color: '#FAFAF9',
-        icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' }],
+        categories: ['finance', 'business', 'productivity'],
+        icons: [
+          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          {
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+        shortcuts: [
+          { name: 'Hoy', url: '/', icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }] },
+          { name: 'Resumen', url: '/resumen', icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }] },
+        ],
       },
       workbox: {
         navigateFallback: '/index.html',
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Solo la letra latina de Inter; las otras escrituras no se usan.
+        globIgnores: ['**/inter-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2'],
+        cleanupOutdatedCaches: true,
       },
     }),
   ],

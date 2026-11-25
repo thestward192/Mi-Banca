@@ -251,9 +251,9 @@ export function VistaDia({ fecha, esHoy }: Props) {
       ) : escritorio ? (
         <TablaRegistros registros={registros} resaltadoId={resaltadoId} onTocar={abrirEdicion} />
       ) : (
-        <ul className="grid gap-2 sm:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {registros.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} className="min-w-0">
               {r.tipo === 'jugada' ? (
                 <TarjetaJugada
                   jugada={r}

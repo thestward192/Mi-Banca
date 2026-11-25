@@ -38,7 +38,7 @@ export function TarjetaMovimiento({ movimiento: m, resaltada, onTocar }: Props) 
         <span className="min-w-0 flex-1 truncate font-medium">
           {entrega ? 'Entrega a dueños' : 'Ingreso'}
         </span>
-        <span className="tabular font-semibold text-movimiento">
+        <span className="tabular shrink-0 font-semibold text-movimiento">
           {entrega ? '−' : '+'}
           {formatearNumero(m.monto)}
         </span>
@@ -47,7 +47,7 @@ export function TarjetaMovimiento({ movimiento: m, resaltada, onTocar }: Props) 
         <span className="min-w-0 flex-1 truncate text-muted-foreground">
           {m.nota ? `"${m.nota}"` : hora ? `A las ${hora}` : ''}
         </span>
-        <span className="tabular text-base font-bold">{formatearNumero(m.bancaResultante)}</span>
+        <span className="tabular shrink-0 text-base font-bold">{formatearNumero(m.bancaResultante)}</span>
       </div>
     </button>
   )

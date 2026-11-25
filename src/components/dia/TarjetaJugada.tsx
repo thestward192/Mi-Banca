@@ -28,15 +28,15 @@ export function TarjetaJugada({ jugada: j, resaltada, onTocar }: Props) {
       <div className="flex items-baseline gap-2">
         {j.numero && <span className="tabular font-semibold">#{j.numero}</span>}
         <span className="min-w-0 flex-1 truncate">{j.juegoNombre}</span>
-        <span className="tabular text-base font-bold">{formatearNumero(j.bancaResultante)}</span>
+        <span className="tabular shrink-0 text-base font-bold">{formatearNumero(j.bancaResultante)}</span>
       </div>
 
-      <dl className="tabular mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 text-sm">
-        <div className="flex gap-1.5">
+      <dl className="tabular mt-1.5 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-sm">
+        <div className="flex min-w-0 flex-wrap gap-x-1.5">
           <dt className="text-muted-foreground">Vendió</dt>
           <dd>{formatearNumero(j.vendido)}</dd>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex min-w-0 flex-wrap gap-x-1.5">
           <dt className="text-muted-foreground">Gan.</dt>
           <dd className="text-ganancia">
             {formatearConSigno(j.ganancia)}
@@ -45,11 +45,11 @@ export function TarjetaJugada({ jugada: j, resaltada, onTocar }: Props) {
             )}
           </dd>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex min-w-0 flex-wrap gap-x-1.5">
           <dt className="text-muted-foreground">Neto</dt>
           <dd>{formatearNumero(j.neto)}</dd>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex min-w-0 flex-wrap gap-x-1.5">
           {j.premio > 0 ? (
             <>
               <dt className="text-muted-foreground">Premio</dt>

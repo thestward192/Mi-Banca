@@ -26,6 +26,23 @@ Otros comandos:
 | `npm run dev` | Servidor de desarrollo en http://localhost:5173 |
 | `npm run build` | Revisa los tipos y genera la versión final en `dist/` |
 | `npm run preview` | Sirve la versión de `dist/` para probarla |
+| `npm test` | Corre las pruebas (cálculos con los datos del 24 de noviembre, periodos y CSV) |
+| `npm run iconos` | Vuelve a generar los íconos PNG a partir de `public/icono.svg` |
+
+### Qué hay en la app
+
+| Pantalla (menú) | Para qué sirve |
+|---|---|
+| Hoy | Banca, jugadas, movimientos de banca y apuntes del día |
+| Historial | Días anteriores; se abren y se corrigen igual que Hoy (recalcula hasta hoy) |
+| Resumen | Totales por semana, mes o año |
+| Banca | Banca actual, entrega o ingreso, ajustar al monto real con motivo |
+| Ganancia acumulada | Acumulado, registrar y corregir cobros |
+| Juegos | Agregar, renombrar, cambiar %, ordenar y desactivar |
+| Ajustes generales | % por defecto, moneda, nombre del menú, confirmar al borrar |
+| Apariencia | Claro / Oscuro / Automático y tamaño de letra (por teléfono) |
+| Cambiar contraseña | Cambia la contraseña de la cuenta |
+| Respaldo / Exportar | Descarga un rango de fechas en CSV para Excel |
 
 ---
 
@@ -70,7 +87,7 @@ No hay pantalla de registro: las cuentas solo se crean desde la consola.
 
 ### 2.4 Crear la base de datos
 1. **Firestore Database → Crear base de datos**, en modo **producción** y en una ubicación cercana (por ejemplo `us-central1` o `us-east1`).
-2. En **Reglas**, pega estas reglas y toca **Publicar** (cada usuario solo ve sus propios datos):
+2. En **Reglas**, pega el contenido de [firestore.rules](firestore.rules) y toca **Publicar**. Cada usuario solo puede ver y cambiar lo que está dentro de `usuarios/{su uid}`; todo lo demás queda cerrado.
 
 ```
 rules_version = '2';
@@ -82,6 +99,24 @@ service cloud.firestore {
   }
 }
 ```
+
+Si usas la línea de comandos de Firebase, también se pueden publicar desde aquí (`firebase.json` ya apunta al archivo):
+
+```bash
+npx firebase-tools deploy --only firestore:rules --project mi-banca-d73c7
+```
+
+### 2.5 Cómo se guardan los datos
+
+```
+usuarios/{uid}/config/general          banca actual, ganancia acumulada, ajustes
+usuarios/{uid}/juegos/{id}             catálogo de juegos
+usuarios/{uid}/dias/{AAAA-MM-DD}       totales del día y apuntes
+usuarios/{uid}/dias/{fecha}/registros  jugadas y movimientos, en orden
+usuarios/{uid}/cobrosGanancia/{id}     cobros de la ganancia
+```
+
+Todo lo que cambia la banca se escribe en un solo *batch* (funciona sin señal y se sincroniza después). Al corregir un día anterior, la app recalcula en cadena los días siguientes hasta hoy.
 
 ---
 
@@ -104,4 +139,13 @@ service cloud.firestore {
 - **Android (Chrome):** abrir la página → menú ⋮ → **Instalar app** / **Agregar a pantalla principal**.
 - **iPhone (Safari):** abrir la página → botón Compartir → **Agregar a inicio**.
 
-Después del primer ingreso la sesión queda guardada y no vuelve a pedir usuario ni contraseña, salvo que se toque **Cerrar sesión**.
+Queda un ícono negro con un boleto en la pantalla principal y se abre a pantalla completa, sin la barra del navegador. Después del primer ingreso la sesión queda guardada y no vuelve a pedir usuario ni contraseña, salvo que se toque **Cerrar sesión**.
+
+La app funciona con mala señal: lo que se anota sin conexión se guarda en el teléfono y se sube solo cuando vuelve el internet (arriba aparece "Sin conexión · se guardará al volver"). Cuando se publica una versión nueva, la app se actualiza sola la próxima vez que se abre.
+
+### Recomendaciones para Wendy
+1. **Cambiar la contraseña** desde el menú después del primer ingreso (1234 es muy fácil de adivinar).
+2. **Poner la banca inicial** del primer día: tocar "Banca inicial" en Hoy.
+3. **Poner el acumulado** del cuaderno: menú → Ganancia acumulada → Corregir acumulado.
+4. **Llevar el cuaderno en paralelo 1–2 semanas** hasta confiar en los números.
+5. **Respaldo semanal**: menú → Respaldo / Exportar → "Todas las jugadas (CSV)".

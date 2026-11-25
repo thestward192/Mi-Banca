@@ -58,10 +58,10 @@ export default function Ganancia() {
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        <Button size="lg" onClick={() => setHojaCobro({ abierta: true, cobro: null })}>
+        <Button size="lg" className="h-auto min-h-14 py-2 whitespace-normal" onClick={() => setHojaCobro({ abierta: true, cobro: null })}>
           <HandCoins /> Registrar cobro de ganancia
         </Button>
-        <Button size="lg" variant="outline" onClick={() => setCorrigiendo(true)}>
+        <Button size="lg" className="h-auto min-h-14 py-2 whitespace-normal" variant="outline" onClick={() => setCorrigiendo(true)}>
           <Pencil /> Corregir acumulado
         </Button>
       </div>
