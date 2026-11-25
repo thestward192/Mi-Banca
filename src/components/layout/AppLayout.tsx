@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { CalendarDays, Menu, WifiOff } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
@@ -28,6 +28,18 @@ export function AppLayout() {
 
   const abrirMenu = useCallback(() => setMenuAbierto(true), [])
   useDeslizarDesdeBorde(abrirMenu, !menuAbierto)
+
+  // Alto real de la barra superior, para que el encabezado de banca quede pegado justo debajo.
+  const refBarra = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const barra = refBarra.current
+    if (!barra) return
+    const obs = new ResizeObserver(() =>
+      document.documentElement.style.setProperty('--alto-barra', `${barra.offsetHeight}px`),
+    )
+    obs.observe(barra)
+    return () => obs.disconnect()
+  }, [])
 
   // Cerrar el menu deslizando hacia la izquierda.
   const toqueX = useRef<number | null>(null)
@@ -71,7 +83,7 @@ export function AppLayout() {
       </Sheet>
 
       {/* Barra superior */}
-      <header className="sticky top-0 z-30 border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+      <header ref={refBarra} className="sticky top-0 z-30 border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
         <div className="mx-auto flex h-14 max-w-[960px] items-center gap-2 px-2 lg:px-4">
           <Button
             variant="ghost"
