@@ -23,8 +23,18 @@ import {
 import { toast } from 'sonner'
 import { db } from '@/lib/firebase'
 import { calcularDia } from '@/lib/calculos'
-import { colDias, colJuegos, colRegistros, refConfig, refDia, refJuego, refRegistro } from './refs'
-import type { Config, Dia, Juego, Registro } from './tipos'
+import {
+  colCobros,
+  colDias,
+  colJuegos,
+  colRegistros,
+  refCobro,
+  refConfig,
+  refDia,
+  refJuego,
+  refRegistro,
+} from './refs'
+import type { Cobro, Config, Dia, Juego, Registro } from './tipos'
 
 export const JUEGOS_INICIALES: { nombre: string; porcentaje: number }[] = [
   { nombre: 'Primera', porcentaje: 6 },
@@ -280,4 +290,52 @@ export async function guardarCambiosDia(c: CambiosDia): Promise<{ diasSiguientes
   if (Object.keys(cambiosConfig).length) batch.update(refConfig(c.uid), cambiosConfig)
   enviar(batch)
   return { diasSiguientes }
+}
+
+// ---------------------------------------------------------------------------
+// Ajustes y ganancia acumulada
+// ---------------------------------------------------------------------------
+
+export function guardarAjustes(
+  uid: string,
+  cambios: Partial<Pick<Config, 'porcentajeDefault' | 'simboloMoneda' | 'nombre' | 'confirmarBorrar'>>,
+) {
+  const batch = writeBatch(db)
+  batch.update(refConfig(uid), cambios)
+  enviar(batch)
+}
+
+/** Corrige el acumulado a mano (por ejemplo, al empezar con el valor del cuaderno). */
+export function fijarGananciaAcumulada(uid: string, valor: number) {
+  const batch = writeBatch(db)
+  batch.update(refConfig(uid), { gananciaAcumulada: valor })
+  enviar(batch)
+}
+
+type DatosCobro = Pick<Cobro, 'monto' | 'fecha' | 'nota'>
+
+/** Registra un cobro de ganancia: baja el acumulado. No toca la banca. */
+export function registrarCobro(uid: string, datos: DatosCobro, id?: string): string {
+  const ref = id ? refCobro(uid, id) : doc(colCobros(uid))
+  const batch = writeBatch(db)
+  batch.set(ref, { ...datos, creadoEn: serverTimestamp() })
+  batch.update(refConfig(uid), { gananciaAcumulada: increment(-datos.monto) })
+  enviar(batch)
+  return ref.id
+}
+
+export function editarCobro(uid: string, antes: Cobro, datos: DatosCobro) {
+  const batch = writeBatch(db)
+  batch.update(refCobro(uid, antes.id), datos)
+  const delta = antes.monto - datos.monto
+  if (delta !== 0) batch.update(refConfig(uid), { gananciaAcumulada: increment(delta) })
+  enviar(batch)
+}
+
+/** Borra un cobro y devuelve su monto al acumulado. */
+export function eliminarCobro(uid: string, cobro: Cobro) {
+  const batch = writeBatch(db)
+  batch.delete(refCobro(uid, cobro.id))
+  batch.update(refConfig(uid), { gananciaAcumulada: increment(cobro.monto) })
+  enviar(batch)
 }

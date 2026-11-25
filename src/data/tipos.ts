@@ -8,6 +8,10 @@ export type Config = {
   /** Fecha (AAAA-MM-DD) del ultimo dia creado. */
   ultimoDia?: string
   confirmarBorrar?: boolean
+  /** Simbolo que va antes de los montos (por defecto ₡). */
+  simboloMoneda?: string
+  /** Nombre que aparece arriba en el menu (por defecto, el usuario). */
+  nombre?: string
   juegosIniciados?: boolean
 }
 
@@ -63,6 +67,15 @@ export type Movimiento = RegistroBase & {
 }
 
 export type Registro = Jugada | Movimiento
+
+/** usuarios/{uid}/cobrosGanancia/{id}: cuando cobra su comision. No toca la banca. */
+export type Cobro = {
+  id: string
+  monto: number
+  fecha: string // AAAA-MM-DD
+  nota: string
+  creadoEn?: Timestamp | null
+}
 
 /** Lo que se llena en el formulario de movimiento. */
 export type DatosMovimiento = Pick<Movimiento, 'subtipo' | 'monto' | 'nota'>

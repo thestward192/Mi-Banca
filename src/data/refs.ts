@@ -11,5 +11,8 @@ export const colRegistros = (uid: string, fecha: string) =>
 export const refRegistro = (uid: string, fecha: string, id: string) =>
   doc(db, 'usuarios', uid, 'dias', fecha, 'registros', id)
 
+export const colCobros = (uid: string) => collection(db, 'usuarios', uid, 'cobrosGanancia')
+export const refCobro = (uid: string, id: string) => doc(db, 'usuarios', uid, 'cobrosGanancia', id)
+
 /** Id nuevo para un registro, generado en el telefono (funciona sin conexion). */
 export const nuevoIdRegistro = (uid: string, fecha: string) => doc(colRegistros(uid, fecha)).id

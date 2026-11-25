@@ -4,6 +4,7 @@ import { useAuth } from '@/auth/AuthProvider'
 import { colJuegos, refConfig } from './refs'
 import { inicializarCuenta } from './operaciones'
 import { useColeccion, useDocumento } from './useFirestore'
+import { establecerSimbolo } from '@/lib/formato'
 import type { Config, Juego } from './tipos'
 
 type Datos = {
@@ -34,17 +35,18 @@ export function DatosProvider({ children }: { children: ReactNode }) {
     }
   }, [config.datos, config.desdeServidor, uid])
 
-  const valor = useMemo<Datos>(
-    () => ({
+  const valor = useMemo<Datos>(() => {
+    // El simbolo de moneda se aplica antes de dibujar los montos.
+    establecerSimbolo(config.datos?.simboloMoneda)
+    return {
       uid,
       config:
         config.datos === null && config.desdeServidor
           ? undefined // se esta creando
           : config.datos,
       juegos: juegos.datos,
-    }),
-    [uid, config.datos, config.desdeServidor, juegos.datos],
-  )
+    }
+  }, [uid, config.datos, config.desdeServidor, juegos.datos])
 
   return <DatosContext.Provider value={valor}>{children}</DatosContext.Provider>
 }

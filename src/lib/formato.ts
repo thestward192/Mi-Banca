@@ -6,6 +6,12 @@
  */
 
 export const SIMBOLO_MONEDA = '₡'
+let simboloActual = SIMBOLO_MONEDA
+
+/** Cambia el simbolo de todos los montos (Ajustes generales). */
+export function establecerSimbolo(simbolo: string | undefined) {
+  simboloActual = simbolo?.trim() || SIMBOLO_MONEDA
+}
 const MENOS = '−' // signo menos tipografico (U+2212)
 
 /** 96188 -> "96.188"; -40000 -> "−40.000" */
@@ -18,7 +24,7 @@ export function formatearNumero(n: number): string {
 }
 
 /** 96188 -> "₡ 96.188"; -500 -> "−₡ 500" */
-export function formatearMonto(n: number, simbolo: string = SIMBOLO_MONEDA): string {
+export function formatearMonto(n: number, simbolo: string = simboloActual): string {
   const entero = Math.round(n)
   const absoluto = formatearNumero(Math.abs(entero))
   return entero < 0 ? `${MENOS}${simbolo} ${absoluto}` : `${simbolo} ${absoluto}`

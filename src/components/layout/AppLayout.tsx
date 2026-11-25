@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { CalendarDays, Menu, WifiOff } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
+import { useDatos } from '@/data/DatosProvider'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -29,7 +30,8 @@ export function AppLayout() {
   const enLinea = useEnLinea()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
-  const nombre = correoANombre(usuario?.email)
+  const { config } = useDatos()
+  const nombre = config?.nombre?.trim() || correoANombre(usuario?.email)
 
   const abrirMenu = useCallback(() => setMenuAbierto(true), [])
   useDeslizarDesdeBorde(abrirMenu, !menuAbierto)

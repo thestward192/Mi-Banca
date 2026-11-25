@@ -13,6 +13,21 @@
     <meta name="apple-mobile-web-app-title" content="Mi Banca" />
     <meta name="description" content="Control de ventas de lotería y banca" />
     <title>Mi Banca</title>
+    <script>
+      // Aplicar tema y tamano de letra antes de dibujar (sin parpadeo). Ver src/lib/apariencia.ts.
+      try {
+        var a = JSON.parse(localStorage.getItem('mibanca:apariencia') || '{}')
+        var oscuro =
+          a.tema === 'oscuro' ||
+          (a.tema === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (oscuro) {
+          document.documentElement.classList.add('dark')
+          document.documentElement.style.colorScheme = 'dark'
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0C0A09')
+        }
+        if (a.letra && a.letra !== 'normal') document.documentElement.setAttribute('data-letra', a.letra)
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

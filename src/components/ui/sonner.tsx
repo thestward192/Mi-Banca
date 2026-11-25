@@ -6,11 +6,10 @@ import {
   TriangleAlertIcon,
 } from 'lucide-react'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
+import { useOscuro } from '@/lib/apariencia'
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const isDark =
-    typeof document !== 'undefined' &&
-    document.documentElement.classList.contains('dark')
+  const isDark = useOscuro()
 
   return (
     <Sonner

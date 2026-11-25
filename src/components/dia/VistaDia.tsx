@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeftRight, CalendarDays, ChevronLeft, History, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -35,6 +35,8 @@ export function VistaDia({ fecha, esHoy }: Props) {
   const { uid, config, juegos } = useDatos()
   const { dia, registros, cargando, noExiste } = useDia(fecha, { crearSiFalta: esHoy })
   const escritorio = useMediaQuery('(min-width: 1024px)')
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const [formAbierto, setFormAbierto] = useState(false)
   const [editando, setEditando] = useState<Jugada | null>(null)
@@ -52,6 +54,14 @@ export function VistaDia({ fecha, esHoy }: Props) {
     const t = window.setTimeout(() => setResaltadoId(null), 1500)
     return () => window.clearTimeout(t)
   }, [resaltadoId])
+
+  // Desde Menu > Banca: abrir directo la hoja de movimiento.
+  useEffect(() => {
+    if ((location.state as { abrir?: string } | null)?.abrir !== 'movimiento') return
+    setEditandoMov(null)
+    setMovAbierto(true)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navigate])
 
   if (config === null && !navigator.onLine) return <SinConexionPrimeraVez />
   if (!esHoy && noExiste) return <DiaSinDatos fecha={fecha} />
