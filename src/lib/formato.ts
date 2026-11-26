@@ -37,19 +37,38 @@ export function formatearConSigno(n: number): string {
   return entero > 0 ? `+${formatearNumero(entero)}` : formatearNumero(entero)
 }
 
+/** El texto empieza con signo menos ("-" o "−"), antes o despues del simbolo. */
+function empiezaConMenos(texto: string): boolean {
+  return /^[^\d]*[-−]/.test(texto)
+}
+
 /**
  * Convierte lo que escribe en un campo de monto a numero entero.
  * Ignora puntos, espacios y simbolos: "31.150" -> 31150, "" -> 0.
+ * Respeta el signo menos: "−500" -> -500.
  */
 export function parsearMonto(texto: string): number {
   const digitos = texto.replace(/\D/g, '')
-  return digitos ? Number.parseInt(digitos, 10) : 0
+  if (!digitos) return 0
+  const n = Number.parseInt(digitos, 10)
+  return empiezaConMenos(texto) && n !== 0 ? -n : n
 }
 
-/** Mientras escribe: "31150" -> "31.150"; "" -> "". */
-export function formatearMientrasEscribe(texto: string): string {
+/**
+ * Mientras escribe: "31150" -> "31.150"; "" -> "".
+ * Con permitirNegativo: "-500" -> "−500" y "-" se deja tal cual para seguir escribiendo.
+ */
+export function formatearMientrasEscribe(texto: string, permitirNegativo = false): string {
+  const negativo = permitirNegativo && empiezaConMenos(texto)
   const digitos = texto.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
-  return digitos ? formatearNumero(Number.parseInt(digitos, 10)) : ''
+  if (!digitos) return negativo ? MENOS : ''
+  const n = Number.parseInt(digitos, 10)
+  return negativo && n !== 0 ? `${MENOS}${formatearNumero(n)}` : formatearNumero(n)
+}
+
+/** Cambia el signo de lo escrito en un campo: "500" <-> "−500". */
+export function cambiarSigno(texto: string): string {
+  return empiezaConMenos(texto) ? texto.replace(/[-−]/, '') : `${MENOS}${texto}`
 }
 
 /**

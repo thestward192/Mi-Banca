@@ -48,7 +48,7 @@ export function ResumenDia({ abierto, onCambiar, dia, onCambiarBancaInicial }: P
             }}
           >
             <Campo id="banca-inicial" etiqueta="Banca inicial">
-              <InputMonto id="banca-inicial" valor={valor} onValor={setValor} autoFocus />
+              <InputMonto id="banca-inicial" valor={valor} onValor={setValor} permitirNegativo autoFocus />
             </Campo>
             <p className="text-sm text-muted-foreground">
               Las bancas de las líneas de este día se vuelven a calcular.

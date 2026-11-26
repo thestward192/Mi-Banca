@@ -286,7 +286,7 @@ function HojaCorregir({
           sigue sumando la ganancia de cada día.
         </p>
         <Campo id="acumulado" etiqueta="Ganancia acumulada">
-          <InputMonto id="acumulado" valor={valor} onValor={setValor} />
+          <InputMonto id="acumulado" valor={valor} onValor={setValor} permitirNegativo />
         </Campo>
       </form>
     </Hoja>

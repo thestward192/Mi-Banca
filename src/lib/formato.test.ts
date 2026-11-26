@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  cambiarSigno,
   formatearConSigno,
   formatearMientrasEscribe,
   formatearMonto,
@@ -41,6 +42,19 @@ describe('campos de monto', () => {
     expect(formatearMientrasEscribe('63.000' + '000')).toBe('63.000.000')
     expect(formatearMientrasEscribe('007')).toBe('7')
     expect(formatearMientrasEscribe('')).toBe('')
+  })
+
+  it('acepta negativos solo donde se permiten', () => {
+    expect(parsearMonto('−500')).toBe(-500)
+    expect(parsearMonto('-1.250')).toBe(-1_250)
+    expect(parsearMonto('−₡ 500')).toBe(-500)
+    expect(parsearMonto(formatearNumero(-40_000))).toBe(-40_000)
+    expect(parsearMonto('−')).toBe(0)
+    expect(formatearMientrasEscribe('-1250', true)).toBe('−1.250')
+    expect(formatearMientrasEscribe('-', true)).toBe('−')
+    expect(formatearMientrasEscribe('-1250')).toBe('1.250')
+    expect(cambiarSigno('500')).toBe('−500')
+    expect(cambiarSigno('−500')).toBe('500')
   })
 
   it('lee porcentajes con coma o punto', () => {

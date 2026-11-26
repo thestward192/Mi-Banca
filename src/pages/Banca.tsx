@@ -141,12 +141,12 @@ function HojaAjuste({
     setErrores({})
   }, [abierta])
 
-  const diferencia = real ? parsearMonto(real) - banca : 0
+  const diferencia = real && real !== '−' ? parsearMonto(real) - banca : 0
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
     const nuevos: typeof errores = {}
-    if (!real) nuevos.real = 'Escribe cuánto hay en la banca'
+    if (!real || real === '−') nuevos.real = 'Escribe cuánto hay en la banca'
     if (!motivo.trim()) nuevos.motivo = 'Escribe el motivo del ajuste'
     setErrores(nuevos)
     if (Object.keys(nuevos).length) return
@@ -180,7 +180,7 @@ function HojaAjuste({
           cuánto hay de verdad y la diferencia queda anotada hoy como movimiento, con el motivo.
         </p>
         <Campo id="banca-real" etiqueta="Banca real" error={errores.real}>
-          <InputMonto id="banca-real" valor={real} onValor={setReal} invalido={!!errores.real} />
+          <InputMonto id="banca-real" valor={real} onValor={setReal} invalido={!!errores.real} permitirNegativo />
         </Campo>
         <Campo id="motivo" etiqueta="Motivo" error={errores.motivo}>
           <Input
